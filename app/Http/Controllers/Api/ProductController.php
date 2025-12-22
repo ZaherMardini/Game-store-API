@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class ProductController extends Controller
@@ -27,11 +29,19 @@ class ProductController extends Controller
     {
       $info = $request->validated();
       $productProps = collect($info)->except('categories')->all();
-      $product = Product::create($productProps);
-      if(collect($info)->has('categories') && isset($product)){
-        $product->categories()->sync($info['categories']);
+      $product = Product::where('name', $productProps['name'])->first();
+      if(!$product){
+        if($request->file('image')){
+          $productProps['image_path'] = $request->file('image')->store('products_images', 'public');
+          unset($productProps['image']);
+        }
+        $product = Product::create($productProps);
+        if(collect($info)->has('categories')){
+          $product->categories()->sync($info['categories']);
+        }
       }
-      return new ProductResource($product->load('categories'));
+      $product = new ProductResource($product->load('categories'));
+      return $product;
     }
 
     /**

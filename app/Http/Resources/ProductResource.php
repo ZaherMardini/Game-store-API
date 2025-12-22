@@ -19,6 +19,7 @@ class ProductResource extends JsonResource
         'name' => $this->name,
         'price' => $this->price,
         'categories' => CategoryResource::collection($this->whenLoaded('categories')),
+        'image_path' => $this->image_path,
         'created_at' => $this->created_at,
         'updated_at' => $this->updated_at,
       ];

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
@@ -28,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
   {
     Model::unguard();
     Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
-    Gate::define('Super user', fn(User $user) => $user->sudo);
+    Gate::define('Super user', function(User $user) {
+      $user = Auth::guard('sanctum')->user();
+      return $user['sudo'];
+    });
   }
 }

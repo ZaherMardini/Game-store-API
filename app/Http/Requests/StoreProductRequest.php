@@ -12,8 +12,8 @@ class StoreProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-      // return Gate::allows('Super user');
-      return true;
+      return Gate::allows('Super user'); // test this
+      // return true;
     }
 
     /**
@@ -27,6 +27,7 @@ class StoreProductRequest extends FormRequest
         'name' => ['required', 'string', 'min:5'],
         'description' => ['required', 'string', 'min:5'],
         'price' => ['required','numeric','min:20'],
+        'image' => ['required'],
         'categories' => ['sometimes','array'],
         'categories.*' => ['integer', 'exists:categories,id']
       ];
