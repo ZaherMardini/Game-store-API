@@ -1,0 +1,89 @@
+### Checkout Workflow
+
+**Scenario:**
+1. Authenticated user has cart with:
+   - Product A ($10, qty 2)
+   - Product B ($5, qty 1)
+2. Product A price updated to $12 before checkout
+3. User proceeds to checkout
+
+**Expected Behavior:**
+- Order is created with status `pending`
+- Order items snapshot prices:
+  - Product A → $10
+  - Product B → $5
+- Total amount = $25
+- Cart is cleared after successful checkout
+
+**Result:** ✅ Passed
+
+
+
+
+
+
+### Cart Merge (Guest → Authenticated User)
+
+**Scenario:**
+1. Guest user adds Product A (qty 2) and Product B (qty 1) to cart
+2. User logs in
+3. System detects existing authenticated cart with:
+   - Product A (qty 3)
+   - Product C (qty 1)
+
+**Expected Behavior:**
+- Product A quantity becomes 5
+- Product B is moved to authenticated cart
+- Product C remains unchanged
+- Guest cart is deleted
+- No duplicate cart items are created
+
+**Edge Cases Tested:**
+- Guest cart empty
+- Authenticated cart empty
+- Both carts contain same product
+- Quantity overflow prevention
+
+**Result:** ✅ Passed
+
+
+
+
+
+# Project Title
+
+A brief one-line description (e.g., "Simple Laravel CRUD app for managing products" or "RESTful API for e-commerce orders").
+
+## 🚀 Features
+- Create, Read, Update, Delete operations
+- Authentication (JWT / Sanctum)
+- Error handling & validation
+- Optimized queries with eager loading
+
+## 🛠️ Tech Stack
+- Laravel (PHP)
+- MySQL / PostgreSQL
+- Postman for API testing
+
+## 📦 Setup
+1. Clone repo: `git clone https://github.com/username/project-name.git`
+2. Install dependencies: `composer install`
+3. Configure `.env` (DB, keys)
+4. Run migrations: `php artisan migrate`
+5. Start server: `php artisan serve`
+
+## 📖 API Endpoints
+- `POST /api/login` – User login
+- `GET /api/products` – List products
+- `POST /api/orders` – Create order (idempotent)
+
+## 📸 Demo
+Include screenshots or Postman examples here.
+
+---
+
+
+This project focuses on testing critical business flows rather than superficial endpoint coverage.
+Feature tests include:
+
+Guest-to-user cart merging

@@ -1,0 +1,21 @@
+You're right, a logged-in user is easy to identify because they present a token on every request. A guest, by definition, presents nothing. So, the core of the problem is this: how can you give a temporary, unique identity to someone who is anonymous?
+
+Think about the tools you have available for storing small pieces of information on the user's computer. What's a common web technology that allows a server to leave a "note" for the browser to remember and send back on future requests?
+
+Once you have a way to store that note, what kind of information would you put in it to make it a reliable identifier? It needs to be unique, right? How can you generate a string in PHP/Laravel that is highly unlikely to ever be repeated?
+
+Now that you have a plan for giving the guest a unique ID and storing it on their end, how does your application use it? When a guest adds an item for the first time, you'll need to do two things:
+
+Create a new Cart in your database.
+How would you link that new Cart to the unique ID you just generated? This might require a small change to your carts table schema.
+For every subsequent action that guest takes, your application's logic would be:
+
+"Hello browser, do you have my special note?"
+"Yes? Great, I'll use the ID in that note to find your existing cart."
+"No? Okay, you must be a completely new guest. Let's start the process over from the top."
+This covers the guest experience. But what happens when that guest decides to log in? They now have two potential identities: their guest ID and their permanent user_id. You can't have two separate carts. How would you merge them?
+
+Think about the sequence of events during a login. Is there a specific place in your authentication flow where you could run some extra code right after the user's identity is confirmed? This would be the perfect time to find their guest cart, find their user cart, combine the items, and clean up the temporary data.
+
+
+
