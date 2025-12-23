@@ -26,7 +26,7 @@ class CartController extends Controller
       return $this->service->firstVisit();
     }
     else if(!$login->check() && isset($guest_token)){
-      return $this->service->subsequent($guest_token);
+      return $this->service->consecutive($guest_token);
     }
     else if($login->check() && isset($guest_token)){
       return $this->service->loggedGuest($login->id(), $guest_token);
@@ -34,5 +34,9 @@ class CartController extends Controller
     else{
       return $this->service->loggedUser($login->id());
     }
+  }
+  public function clear(Cart $cart){
+    $cart->items()->delete();
+    return response()->json('Items cleared');
   }
 }

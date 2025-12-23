@@ -17,8 +17,9 @@ Route::middleware('guest')->prefix('v1')->group(function(){
   Route::get('/products/{product}', [ProductController::class, 'show']);
   // end products
   //guest cart
+  Route::post('/cart/newItem', [CartController::class, 'store'])->middleware(AddQueuedCookiesToResponse::class);
   Route::get('/carts', [CartController::class, 'index']);
-  Route::post('/cart/{item}', [CartController::class, 'store'])->middleware(AddQueuedCookiesToResponse::class);
+  Route::delete('/cart/{cart}/items', [CartController::class, 'clear']);
   //end guest cart
 });
 
@@ -26,12 +27,12 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function(){
   Route::post('/logout', [AuthController::class, 'logout']);
   //orders
   Route::get('/orders', [OrderController::class, 'index']);
-  Route::get('/order/{order}', [OrderController::class, 'show']);
-  Route::post('/order', [OrderController::class, 'store']);
+  Route::get('/orders/{order}', [OrderController::class, 'show']);
+  Route::post('/orders', [OrderController::class, 'store']);
   //end orders
   // products
   Route::post('/products', [ProductController::class, 'store']);
-  Route::patch('/products/{product}', [ProductController::class, 'update']);
+  Route::patch('/products/{product}', [ProductController::class, 'update']);// document this
   Route::delete('/products/{product}', [ProductController::class, 'destroy']);
   // end products
   // Reviews

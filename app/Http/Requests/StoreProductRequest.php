@@ -12,7 +12,7 @@ class StoreProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-      return Gate::allows('Super user'); // test this
+      return Gate::allows('Super user');
       // return true;
     }
 

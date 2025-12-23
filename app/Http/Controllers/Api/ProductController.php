@@ -27,6 +27,7 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
+      dd('hit store');
       $info = $request->validated();
       $productProps = collect($info)->except('categories')->all();
       $product = Product::where('name', $productProps['name'])->first();
@@ -57,8 +58,13 @@ class ProductController extends Controller
      */
     public function update(StoreProductRequest $request, Product $product)
     {
+      // dd('update product');
       $info = $request->validated(); // validation bug: StoreProductRequest fucking file doesn't work
       $productInfo = collect($info)->except('categories')->all();
+      if($request->hasFile('image')){
+        $productInfo['image_path'] = $request->file('image')->store('products_images', 'public');
+        unset($productInfo['image']);
+      }
       $product->update($productInfo);
       if (isset($info['categories'])) {
         $product->categories()->sync($info['categories']);
