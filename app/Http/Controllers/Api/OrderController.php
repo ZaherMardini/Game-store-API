@@ -30,6 +30,6 @@ class OrderController extends Controller
     $this->service->checkout();
     $order = $this->service->getOrder();
     $order['idempotency_key'] = $key;
-    return response()->json(['New order' => 'No order created']);
+    return response()->json(['New order' => 'New order created']);
   }
 }

@@ -19,6 +19,7 @@ Route::middleware('guest')->prefix('v1')->group(function(){
   //guest cart
   Route::post('/cart/newItem', [CartController::class, 'store'])->middleware(AddQueuedCookiesToResponse::class);
   Route::get('/carts', [CartController::class, 'index']);
+  Route::get('/cart', [CartController::class, 'show']);
   Route::delete('/cart/{cart}/items', [CartController::class, 'clear']);
   //end guest cart
 });
