@@ -30,10 +30,12 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function(){
   Route::get('/orders', [OrderController::class, 'index']);
   Route::get('/orders/{order}', [OrderController::class, 'show']);
   Route::post('/orders', [OrderController::class, 'store']);
+  Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
+  Route::post('/orders/{order}/refund', [OrderController::class, 'refund']);
   //end orders
   // products
   Route::post('/products', [ProductController::class, 'store']);
-  Route::patch('/products/{product}', [ProductController::class, 'update']);// document this
+  Route::patch('/products/{product}', [ProductController::class, 'update']);
   Route::delete('/products/{product}', [ProductController::class, 'destroy']);
   // end products
   // Reviews

@@ -22,7 +22,7 @@ class CartService{
     if(!isset($info['quantity'])){
       $info['quantity'] = 1;
     }
-    $info['cart_id'] = $cart->id;
+    $info['cart_id'] = $cart['id'];
     $item = CartItem::create($info);
     return response()->json(['New cart created' => $item])->cookie($guest_cookie);
   }
@@ -149,11 +149,4 @@ class CartService{
     $increment ? $item->quantity += 1 : $item->quantity -= 1;
     $item->save();
   }
-  // dump('Items');
-  // dump($items_1);
-  // dump('temp_items');
-  // dump($items_2);
-  // dd('merge logic');
-  // dump($toCommit);
-  // dump($toMove);
 }
