@@ -2,6 +2,8 @@
 A RESTful e-commerce backend API built with Laravel, focused on real-world business logic such as guest cart handling, cart merging on authentication, transactional checkout, and price snapshotting.
 This project is designed as a backend-only system intended to be consumed by web or mobile clients.
 
+## API Documentation You can explore the full API documentation here: [View on Postman](https://documenter.getpostman.com/view/50474404/2sBXVbGDgv)
+
 ## 🏗 Architecture
 
 - Backend-only REST API (no views)
