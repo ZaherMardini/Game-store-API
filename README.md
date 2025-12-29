@@ -39,6 +39,8 @@ When a guest user logs in:
   - Duplicate cart items are prevented
 - The guest cart is removed after a successful merge
 
+"Design option": scheduled jobs to remove unused temp carts from the database after X days for example.
+
 This logic ensures a seamless user experience similar to real-world e-commerce platforms.
 
 
