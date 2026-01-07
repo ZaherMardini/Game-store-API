@@ -6,78 +6,45 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Services\ProductService;
 use Illuminate\Support\Facades\Gate;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-      $products = Product::with('categories')->get();
-      return response()->json(['products' => ProductResource::collection($products)]);
-    }
+  protected $service;
+  public function __construct(ProductService $service){
+    $this->service = $service;
+  }
+  public function index()
+  {
+    $products = Product::with('categories')->get();
+    return ProductResource::collection($products);
+  }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreProductRequest $request)
-    {
-      dd('hit store');
-      $info = $request->validated();
-      $productProps = collect($info)->except('categories')->all();
-      $product = Product::where('name', $productProps['name'])->first();
-      if(!$product){
-        if($request->file('image')){
-          $productProps['image_path'] = $request->file('image')->store('products_images', 'public');
-          unset($productProps['image']);
-        }
-        $product = Product::create($productProps);
-        if(collect($info)->has('categories')){
-          $product->categories()->sync($info['categories']);
-        }
-      }
-      $product = new ProductResource($product->load('categories'));
-      return $product;
-    }
+  public function store(StoreProductRequest $request)
+  {
+    $this->service->setRequest($request);
+    $resource = $this->service->store();
+    return $resource;
+  }
+  
+  public function show(Product $product)
+  {
+    return new ProductResource($product->load('categories'));
+  }
+  
+  public function update(StoreProductRequest $request, Product $product)
+  {
+    $this->service->setRequest($request);
+    return $this->service->update($product);
+  }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Product $product)
-    {
-      return new ProductResource($product->load('categories'));
+  public function destroy(string $id)
+  {
+    if(Gate::denies('Super user')){
+      abort(403);
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(StoreProductRequest $request, Product $product)
-    {
-      // dd('update product');
-      $info = $request->validated(); // validation bug: StoreProductRequest fucking file doesn't work
-      $productInfo = collect($info)->except('categories')->all();
-      if($request->hasFile('image')){
-        $productInfo['image_path'] = $request->file('image')->store('products_images', 'public');
-        unset($productInfo['image']);
-      }
-      $product->update($productInfo);
-      if (isset($info['categories'])) {
-        $product->categories()->sync($info['categories']);
-      }
-      return new ProductResource($product->load('categories'));
-    }
-
-    public function destroy(string $id)
-    {
-      if(Gate::denies('Super user')){
-        abort(403);
-      }
-      Product::findOrFail($id)->delete();
-      return response()->json(['Deleted successfully']);
-    }
+    Product::findOrFail($id)->delete();
+    return response()->json(['Deleted successfully']);
+  }
 }

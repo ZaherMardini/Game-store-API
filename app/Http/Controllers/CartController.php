@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCartItemRequest;
 use App\Models\Cart;
-use App\Models\CartItem;
 use App\Services\CartService;
-use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
@@ -20,20 +18,7 @@ class CartController extends Controller
   }
   public function store(StoreCartItemRequest $request){
     $this->service->setRequest($request);
-    $guest_token = $request->cookie('guest_token');
-    $login = Auth::guard('sanctum');
-    if(!$login->check() && !isset($guest_token)){
-      return $this->service->firstVisit();
-    }
-    else if(!$login->check() && isset($guest_token)){
-      return $this->service->consecutive($guest_token);
-    }
-    else if($login->check() && isset($guest_token)){
-      return $this->service->loggedGuest($login->id(), $guest_token);
-    }
-    else{
-      return $this->service->loggedUser($login->id());
-    }
+    return $this->service->determineStoreFlow();
   }
   public function clear(Cart $cart){
     $cart->items()->delete();

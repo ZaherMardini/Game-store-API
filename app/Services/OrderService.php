@@ -15,7 +15,7 @@ class OrderService {
   protected $order;
   protected $request;
 
-  public function getOrder(){
+  public function getOrder(): Order{
     return $this->order;
   }
   public function setOrder(Order $order){
@@ -118,5 +118,20 @@ class OrderService {
       $result += $price * $item['quantity'];
     }
     return $result;
+  }
+  public function storeOrder(){
+    $request = $this->request;
+    $key = $request->header('idempotency-key');
+    $order = Order::where('idempotency_key', $key)->first();
+    if($order){
+      return response()->json(['Order exists' => $order]);
+    }
+    $result = $this->checkout();
+    if($result){
+      $order = $this->getOrder();
+      $order['idempotency_key'] = $key;
+      return response()->json(['New order created' => $order]);
+    }
+    return response()->json('Checkout failed, check the "checkout flow" docs');
   }
 }

@@ -26,18 +26,7 @@ class OrderController extends Controller
   }
   public function store(Request $request){
     $this->service->setRequest($request);
-    $key = $request->header('idempotency-key');
-    $order = Order::where('idempotency_key', $key)->first();
-    if($order){
-      return response()->json(['Order exists' => $order]);
-    }
-    $result = $this->service->checkout();
-    if($result){
-      $order = $this->service->getOrder();
-      $order['idempotency_key'] = $key;
-      return response()->json(['New order created' => $order]);
-    }
-    return response()->json('Checkout failed, check the "checkout flow" docs');
+    return $this->service->storeOrder();
   }
 
   public function cancel(Order $order){

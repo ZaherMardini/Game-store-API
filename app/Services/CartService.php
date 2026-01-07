@@ -11,11 +11,27 @@ use Illuminate\Support\Str;
 
 class CartService{
   protected $request;
+  protected $validInfo;
+  protected $login;
+  public $guest_token;
+
   public function setRequest(StoreCartItemRequest $request){
     $this->request = $request;
+    $this->validInfo = $request->validated();
+    $this->login = Auth::guard('sanctum');
+    $this->guest_token = $request->cookie('guest_token');
+  }
+  public function checkFirstVisit(){
+    return (!$this->login->check() && !isset($this->guest_token));
+  }
+  public function checkConsecutive(){
+    return (!$this->login->check() && isset($guest_token));
+  }
+  public function checkLoggedGuest(){
+    return ($this->login->check() && isset($guest_token));
   }
   public function firstVisit(){
-    $info = $this->request->validated();
+    $info = $this->validInfo;
     $token = Str::uuid();
     $guest_cookie = cookie('guest_token', $token, '120');
     $cart = Cart::create(['user_id' => null, 'guest_token' => $token]);
@@ -70,18 +86,32 @@ class CartService{
   public function loggedUser(int $id){
     $cart = Cart::where('user_id', $id)->firstOrCreate(['user_id' => $id], ['user_id' => $id]);
     $info = $this->request->validated();
-    $info['cart_id'] = $cart->id;
+    $info['cart_id'] = $cart['id'];
     return $this->insertItem($info);
   }
   public function loggedGuestRequest(Cart $tempCart){
     $info = $this->request->validated();
     $cart = $this->tempToNormalCart($tempCart);
     if($cart){
-      $info['cart_id'] = $cart->id;
+      $info['cart_id'] = $cart['id'];
       Cookie::queue(Cookie::forget('guest_token'));
       return $this->insertItem($info);
     }
     return response()->json(['error' => 'cart not found']);
+  }
+  public function determineStoreFlow(){
+    if($this->checkFirstVisit()){
+      return $this->firstVisit();
+    }
+    else if($this->checkConsecutive()){
+      return $this->consecutive($this->guest_token);
+    }
+    else if($this->checkLoggedGuest()){
+      return $this->loggedGuest($this->login->id(), $this->guest_token);
+    }
+    else{
+      return $this->loggedUser($this->login->id());
+    }
   }
   public function mergeCarts(Cart $temp_cart, Cart $cart){
     $keyedItems = collect($cart->items)->keyBy('product_id');
