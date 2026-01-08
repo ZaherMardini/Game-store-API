@@ -2,7 +2,7 @@
 A RESTful e-commerce backend API built with Laravel, focused on real-world business logic such as guest cart handling, cart merging on authentication, transactional checkout, and price snapshotting.
 This project is designed as a backend-only system intended to be consumed by web or mobile clients.
 
-## API Documentation You can explore the full API documentation here: [View on Postman](https://documenter.getpostman.com/view/50474404/2sBXVbGDgv)
+## API Documentation: full API documentation here: [View on Postman](https://documenter.getpostman.com/view/50474404/2sBXVbGDgv)
 
 ## 🏗 Architecture
 
@@ -38,6 +38,8 @@ When a guest user logs in:
   - New products are transferred
   - Duplicate cart items are prevented
 - The guest cart is removed after a successful merge
+
+"Design option": scheduled jobs to remove unused temp carts from the database after X days for example.
 
 This logic ensures a seamless user experience similar to real-world e-commerce platforms.
 
