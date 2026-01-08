@@ -21,6 +21,7 @@ Route::middleware('guest')->prefix('v1')->group(function(){
   Route::get('/carts', [CartController::class, 'index']);
   Route::get('/cart', [CartController::class, 'show']);
   Route::delete('/cart/{cart}/items', [CartController::class, 'clear']);
+  Route::delete('/cart/{cart}/items/{item}', [CartController::class, 'removeItem']);
   //end guest cart
 });
 

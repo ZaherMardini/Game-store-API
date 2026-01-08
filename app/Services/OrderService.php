@@ -24,7 +24,7 @@ class OrderService {
   public function setRequest(Request $request){
     $this->request = $request;
   }
-  public function initializing(){
+  public function initialize(){
     $this->login = Auth::guard('sanctum');
     $user = $this->login->user();
     $this->cart = $user->cart;

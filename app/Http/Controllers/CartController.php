@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCartItemRequest;
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Services\CartService;
 
 class CartController extends Controller
@@ -17,11 +18,16 @@ class CartController extends Controller
     return response()->json(['carts' => $carts]);
   }
   public function store(StoreCartItemRequest $request){
-    $this->service->setRequest($request);
-    return $this->service->determineStoreFlow();
+    $this->service->setRequest($request);    
+    return $this->service->storeProtocol();
   }
   public function clear(Cart $cart){
-    $cart->items()->delete();
+    $this->service->clear($cart);
     return response()->json('Items cleared');
+  }
+  public function removeItem(Cart $cart, CartItem $item){
+    $this->service->removeItem($item);
+    $cart->load('items');
+    return response()->json(['Item removed' => $item, 'From Cart' => $cart]);
   }
 }

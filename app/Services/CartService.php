@@ -21,17 +21,17 @@ class CartService{
     $this->login = Auth::guard('sanctum');
     $this->guest_token = $request->cookie('guest_token');
   }
-  public function checkFirstVisit(){
-    return (!$this->login->check() && !isset($this->guest_token));
+  public function isFirstVisit(){
+    return !$this->login->check() && !isset($this->guest_token);
   }
-  public function checkConsecutive(){
-    return (!$this->login->check() && isset($guest_token));
+  public function isConsecutive(){
+    return !$this->login->check() && isset($this->guest_token);
   }
-  public function checkLoggedGuest(){
-    return ($this->login->check() && isset($guest_token));
+  public function isLoggedGuest(){
+    return $this->login->check() && isset($this->guest_token);
   }
   public function firstVisit(){
-    $info = $this->validInfo;
+    $info = $this->request->validated();
     $token = Str::uuid();
     $guest_cookie = cookie('guest_token', $token, '120');
     $cart = Cart::create(['user_id' => null, 'guest_token' => $token]);
@@ -39,8 +39,9 @@ class CartService{
       $info['quantity'] = 1;
     }
     $info['cart_id'] = $cart['id'];
-    $item = CartItem::create($info);
-    return response()->json(['New cart created' => $item])->cookie($guest_cookie);
+    CartItem::create($info);
+    $cart->load('items');
+    return response()->json(['New cart created' => $cart])->cookie($guest_cookie);
   }
   public function insertItem($info){
     $item = 
@@ -56,7 +57,6 @@ class CartService{
     else{
       $item = CartItem::create($info);
     }
-    return response()->json(['Inserted item' => $item]);
   }
   public function tempToNormalCart(Cart $cart){
     $cart['guest_token'] = null;
@@ -64,20 +64,21 @@ class CartService{
     $cart->save();
     return $cart;
   }
-  public function consecutive(string $guest_token){
+  public function insertToTempCart(Cart $tempCart){
     $info = $this->request->validated();
-    $cart = Cart::where('guest_token', $guest_token)->firstOrFail();
-    if($cart){
-      $info['cart_id'] = $cart->id;
-      return $this->insertItem($info);
-    }
-    return response()->json(['error' => 'cart not found']);
+    $info['cart_id'] = $tempCart['id'];
+    $this->insertItem($info);
+    return $tempCart;
   }
   public function loggedGuest(int $id ,string $token){
     $temp_cart = Cart::where('guest_token', $token)->first();
     $cart = Cart::where('user_id', $id)->first();
     if($cart && $temp_cart){
-      return $this->mergeCarts($temp_cart, $cart);
+      $this->insertToTempCart($temp_cart);
+      $mergedSuccessfully = $this->mergeCarts($temp_cart, $cart);
+      if($mergedSuccessfully){
+        return $cart;
+      }
     }
     else if(!$cart && $temp_cart){
       return $this->loggedGuestRequest($temp_cart);
@@ -87,7 +88,8 @@ class CartService{
     $cart = Cart::where('user_id', $id)->firstOrCreate(['user_id' => $id], ['user_id' => $id]);
     $info = $this->request->validated();
     $info['cart_id'] = $cart['id'];
-    return $this->insertItem($info);
+    $this->insertItem($info);
+    return $cart;
   }
   public function loggedGuestRequest(Cart $tempCart){
     $info = $this->request->validated();
@@ -95,23 +97,31 @@ class CartService{
     if($cart){
       $info['cart_id'] = $cart['id'];
       Cookie::queue(Cookie::forget('guest_token'));
-      return $this->insertItem($info);
+      $this->insertItem($info);
+      return $cart;
     }
-    return response()->json(['error' => 'cart not found']);
   }
-  public function determineStoreFlow(){
-    if($this->checkFirstVisit()){
+  public function storeProtocol(){
+    $cart = null;
+    $responseMessage = 'success';
+    if($this->isFirstVisit()){
       return $this->firstVisit();
     }
-    else if($this->checkConsecutive()){
-      return $this->consecutive($this->guest_token);
+    else if($this->isConsecutive()){
+      $tempCart = Cart::where('guest_token', $this->guest_token)->firstOrFail();
+      $cart = $this->insertToTempCart($tempCart);
+      $responseMessage = 'Consecutive add to cart';
     }
-    else if($this->checkLoggedGuest()){
-      return $this->loggedGuest($this->login->id(), $this->guest_token);
+    else if($this->isLoggedGuest()){
+      $cart = $this->loggedGuest($this->login->id(), $this->guest_token);
+      $responseMessage = 'Guest user logged in';
     }
     else{
-      return $this->loggedUser($this->login->id());
+      $cart = $this->loggedUser($this->login->id());
+      $responseMessage = 'Logged in user';
     }
+    $cart->load('items');
+    return response()->json([$responseMessage => $cart]);
   }
   public function mergeCarts(Cart $temp_cart, Cart $cart){
     $keyedItems = collect($cart->items)->keyBy('product_id');
@@ -136,7 +146,7 @@ class CartService{
     }
     $temp_cart->delete();
     Cookie::queue(Cookie::forget('guest_token'));
-    return response()->json('Changes committed');
+    return true;
   }
   public function commit(array $toMove, array $toSyncQuantity){
     DB::transaction(function() use($toMove, $toSyncQuantity){
@@ -174,9 +184,5 @@ class CartService{
   }
   public function removeItem(CartItem $item){
     $item->delete();
-  }
-  public function quantityControll(CartItem $item, bool $increment = true){
-    $increment ? $item->quantity += 1 : $item->quantity -= 1;
-    $item->save();
   }
 }

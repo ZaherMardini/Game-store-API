@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Cart;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,10 +14,11 @@ class OrderController extends Controller
   public function __construct(OrderService $service)
   {
     $this->service = $service;
-    $this->service->initializing();
+    $this->service->initialize();
   }
   public function index(){
-    return response()->json(Order::where('user_id', Auth::guard('sanctum')->id())->get());
+    $userOrders = Order::where('user_id', Auth::guard('sanctum')->id())->get();
+    return response()->json($userOrders);
   }
   public function show(Order $order){
     return response()->json($order);
@@ -28,7 +27,6 @@ class OrderController extends Controller
     $this->service->setRequest($request);
     return $this->service->storeOrder();
   }
-
   public function cancel(Order $order){
     $this->service->setOrder($order);
     $result = $this->service->cancel();
